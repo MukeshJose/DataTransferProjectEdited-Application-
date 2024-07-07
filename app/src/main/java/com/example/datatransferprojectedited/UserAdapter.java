@@ -2,6 +2,8 @@ package com.example.datatransferprojectedited;
 
 import android.app.DatePickerDialog;
 import android.graphics.Color;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,6 +42,23 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         holder.userSalary.setText(String.valueOf(user.getSalary()));
         holder.userAge.setText(String.valueOf(user.getAge()));
         holder.userPhoneNumber.setText(user.getPhoneNumber());
+
+        //VALIDATION FOR USERNAME
+
+        InputFilter filter = new InputFilter() {
+            @Override
+            public CharSequence filter(CharSequence source, int start, int end, Spanned dest, int dstart, int dend) {
+                for (int i = start; i < end; i++) {
+                    if (!Character.isLetter(source.charAt(i)) && !Character.isSpaceChar((source.charAt(i)))) {
+                        return "";
+                    }
+                }
+                return null;
+            }
+        };
+
+// Apply the filter to the EditText
+        holder.userName.setFilters(new InputFilter[]{filter});
         if (user.getDob() != null && !user.getDob().isEmpty()) {
             holder.userDOB.setText(user.getDob());
         }
@@ -47,7 +66,6 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         holder.userDOB.setFocusable(false);
         holder.userDOB.setClickable(true);
 
-        //FOR DATE PICKER
 
         holder.userDOB.setOnClickListener(new View.OnClickListener() {
             @Override

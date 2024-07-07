@@ -11,7 +11,7 @@
         android:id="@+id/rv_employees_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="100dp"/>
+        android:layout_marginBottom="100dp" />
 
     <Button
         android:id="@+id/bt_update_button"
@@ -21,6 +21,16 @@
         android:layout_centerInParent="true"
         android:layout_marginTop="-70dp"
         android:text="Edit data" />
+
+    <Button
+        android:id="@+id/bt_next_button"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/rv_employees_list"
+        android:layout_marginTop="-70dp"
+        android:layout_toRightOf="@id/bt_update_button"
+        android:text="Edit data"
+        android:visibility="gone" />
 
 
 </RelativeLayout>

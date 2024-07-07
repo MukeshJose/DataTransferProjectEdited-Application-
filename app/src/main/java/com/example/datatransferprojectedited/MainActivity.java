@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -36,7 +38,7 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     RecyclerView rvUserList;
-    Button editButton;
+    Button editButton, nextButton;
     private ArrayList<Datum> userList = new ArrayList<>();
     private UserAdapter userAdapter;
 
@@ -48,21 +50,23 @@ public class MainActivity extends AppCompatActivity {
 
         rvUserList = findViewById(R.id.rv_employees_list);
         editButton = findViewById(R.id.bt_update_button);
+        nextButton = findViewById(R.id.bt_next_button);
 
+        List<Datum> userList = loadData();
+
+        if (userList.isEmpty()) {
+            fetchDataFromAPI();
+        }
 
         rvUserList.setLayoutManager(new LinearLayoutManager(this));
         userAdapter = new UserAdapter(userList);
         rvUserList.setAdapter(userAdapter);
 
-        fetchDataFromAPI();
 
         editButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
 
-//                if (userAdapter.validateFields()) {
-                //            saveDataToJsonFile();
-//                }
                 List<Datum> users = userAdapter.getUserList();
                 boolean isValid = true;
 
@@ -91,14 +95,21 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 if (isValid) {
-                    // Save the data to the JSON file or send it to the server
                     saveData(users);
                 } else {
                     Toast.makeText(MainActivity.this, "Please correct the errors", Toast.LENGTH_SHORT).show();
                 }
             }
         });
+
+        nextButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayJsonString();
+            }
+        });
     }
+
 
     private void saveData(List<Datum> users) {
         Gson gson = new Gson();
@@ -185,6 +196,9 @@ public class MainActivity extends AppCompatActivity {
 
     private void displayJsonString() {
         String jsonString = JSONHelper.loadJSONString(this, "users.json");
+        Intent intent = new Intent(getApplicationContext(), MainActivity2.class);
+        intent.putExtra("data", jsonString);
+        startActivity(intent);
 //        jsonTextView.setText(jsonString);
     }
 }
