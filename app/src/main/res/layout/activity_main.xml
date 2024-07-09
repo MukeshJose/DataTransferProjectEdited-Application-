@@ -7,10 +7,22 @@
 
     tools:context=".MainActivity">
 
+    <androidx.appcompat.widget.SearchView
+        android:id="@+id/sv_searchBar"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/common_background"
+        android:backgroundTint="#515050"
+        android:queryHint="Search by username" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rv_employees_list"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_below="@id/sv_searchBar"
+        android:layout_marginTop="10dp"
         android:layout_marginBottom="100dp" />
 
     <Button
@@ -18,9 +30,19 @@
         android:layout_width="140dp"
         android:layout_height="40dp"
         android:layout_below="@+id/rv_employees_list"
-        android:layout_centerInParent="true"
+        android:layout_centerHorizontal="true"
         android:layout_marginTop="-70dp"
         android:text="Edit data" />
+
+    <Button
+        android:id="@+id/bt_save_button"
+        android:layout_width="140dp"
+        android:layout_height="40dp"
+        android:layout_below="@+id/rv_employees_list"
+        android:layout_alignStart="@id/bt_update_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="-70dp"
+        android:text="SAVE" />
 
     <Button
         android:id="@+id/bt_next_button"

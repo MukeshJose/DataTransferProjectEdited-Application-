@@ -3,8 +3,10 @@ package com.example.datatransferprojectedited;
 import static android.content.ContentValues.TAG;
 
 import androidx.appcompat.app.AppCompatActivity;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.appcompat.widget.SearchView;
 
 import android.content.Intent;
 import android.net.Uri;
@@ -12,6 +14,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -20,17 +23,23 @@ import com.example.datatransferprojectedited.model.Root;
 import com.example.datatransferprojectedited.retrofit.APIClient;
 import com.example.datatransferprojectedited.retrofit.APIInterface;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -38,9 +47,13 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity {
     RecyclerView rvUserList;
-    Button editButton, nextButton;
+    Button editButton, nextButton, saveButton;
     private ArrayList<Datum> userList = new ArrayList<>();
     private UserAdapter userAdapter;
+    private List<Datum> originalUserList = new ArrayList<>();
+
+
+    SearchView searchView;
 
 
     @Override
@@ -51,18 +64,53 @@ public class MainActivity extends AppCompatActivity {
         rvUserList = findViewById(R.id.rv_employees_list);
         editButton = findViewById(R.id.bt_update_button);
         nextButton = findViewById(R.id.bt_next_button);
+        saveButton = findViewById(R.id.bt_save_button);
+        searchView = findViewById(R.id.sv_searchBar);
 
-        List<Datum> userList = loadData();
+        saveButton.setVisibility(View.GONE);
 
-        if (userList.isEmpty()) {
-            fetchDataFromAPI();
-        }
+        fetchDataFromAPI();
+//        List<Datum> userList = loadData();
+//
+//        if (userList.isEmpty()) {
+//            userList.clear();
+//            fetchDataFromAPI();
+//        }
 
         rvUserList.setLayoutManager(new LinearLayoutManager(this));
-        userAdapter = new UserAdapter(userList);
+        userAdapter = new UserAdapter(getApplicationContext(), userList);
         rvUserList.setAdapter(userAdapter);
 
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                filterData(query);
+//                userAdapter.filter(query);
+                saveButton.setVisibility(View.GONE);
+                editButton.setVisibility(View.GONE);
+                return false;
+            }
 
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                filterData(newText);
+//                userAdapter.filter(newText);
+                editButton.setVisibility(View.GONE);
+                if (newText.isEmpty()) {
+                    editButton.setVisibility(View.VISIBLE);
+                    saveButton.setVisibility(View.GONE);
+                }
+                return false;
+
+            }
+        });
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+//                Toast.makeText(MainActivity.this, "Saved", Toast.LENGTH_SHORT).show();
+//                saveFilteredResultsToJsonFile();
+            }
+        });
         editButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -108,6 +156,22 @@ public class MainActivity extends AppCompatActivity {
                 displayJsonString();
             }
         });
+    }
+
+    private void filterData(String query) {
+        userList.clear();
+        if (query.isEmpty()) {
+            userList.addAll(originalUserList); // Restore original list when query is empty
+        } else {
+            query = query.toLowerCase(Locale.getDefault());
+            for (Datum user : originalUserList) {
+                if (user.getUsername().toLowerCase(Locale.getDefault()).contains(query)) {
+                    userList.add(user);
+                }
+            }
+        }
+        userAdapter.notifyDataSetChanged();
+
     }
 
 
@@ -165,6 +229,9 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Raw API Response: " + rawJson); // Log the raw response
 
                     if (root != null) {
+                        originalUserList.clear();
+                        originalUserList.addAll(root.getData());
+
                         userList.clear();
                         userList.addAll(root.getData());
                         userAdapter.notifyDataSetChanged();
@@ -176,7 +243,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.e(TAG, "Root is null");
                     }
                 } else {
-                    Log.e(TAG, "API Response not successful");
+                    Toast.makeText(MainActivity.this, "API FAILED", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -200,5 +267,24 @@ public class MainActivity extends AppCompatActivity {
         intent.putExtra("data", jsonString);
         startActivity(intent);
 //        jsonTextView.setText(jsonString);
+    }
+
+    private void saveFilteredResultsToJsonFile() {
+        List<Datum> filteredUserList = userAdapter.getFilteredUserList();
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        JsonArray jsonArray = gson.toJsonTree(filteredUserList).getAsJsonArray();
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.add("users", jsonArray);
+
+        String jsonString = gson.toJson(jsonObject);
+
+        File file = new File(getExternalFilesDir(null), "filtered_users.json");
+        try (FileWriter writer = new FileWriter(file)) {
+            writer.write(jsonString);
+            Toast.makeText(this, "Filtered results saved to JSON file", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            Toast.makeText(this, "Failed to save JSON file", Toast.LENGTH_SHORT).show();
+        }
     }
 }
